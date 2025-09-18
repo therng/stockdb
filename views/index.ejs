@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-title" content="SHIRT">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+    <link rel="manifest" href="/views/manifest.json">
+
+    <meta name="theme-color" content="#000000">
+    <title>SHIRT</title>
+</head>
+<link rel="stylesheet" href="/public/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <!-- ส่วนฟอร์มด้านซ้าย -->
+        <aside class="form-container">
+            <form id="stockForm" action="/submit" method="post" enctype="multipart/form-data">
+                <div id="imagePreview" class="image-preview"></div>
+
+                <div class="form-row">
+                    <div class="form-group half-width">
+                        <label for="sku">รหัสสินค้า(SKU)</label>
+                        <input id="sku" type="text" name="sku" placeholder="รหัส:<%= nextSku %>" autocomplete="off">
+                    </div>
+                    <div class="form-group half-width">
+                        <label for="qty">จำนวน</label>
+                        <select id="qty" name="qty">
+                            <% for (let i=1; i<=12; i++) { %>
+                                <option value="<%= i %>"><%= i %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row upload-row">
+                    <div class="half-width">
+                        <label for="image">เลือกรูปภาพ</label>
+                        <input id="image" type="file" name="image" accept="image/*">
+                        <label for="image" class="upload-btn">หน้า</label>
+                    </div>
+                    <div class="half-width">
+                        <label for="image_b">   </label>
+                        <input id="image_b" type="file" name="image_b" accept="image/*">
+                        <label for="image_b" class="upload-btn">หลัง</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ขนาด</label>
+                    <div class="size-buttons" role="group">
+                        <button type="submit" name="size" value="XS" class="size-btn-xs">XS</button>
+                        <button type="submit" name="size" value="S" class="size-btn-s">S</button>
+                        <button type="submit" name="size" value="M" class="size-btn-m">M</button>
+                        <button type="submit" name="size" value="L" class="size-btn-l">L</button>
+                        <button type="submit" name="size" value="XL" class="size-btn-xl">XL</button>
+                        <button type="submit" name="size" value="XXL" class="size-btn-xxl">XXL</button>
+                    </div>
+                </div>
+            </form>
+        </aside>
+
+        <!-- ส่วนแสดงผลด้านขวา -->
+        <main class="product-grid">
+            <% if (items.length === 0) { %>
+                <div class="empty-state-container">
+                    <p class="empty-state">ยังไม่มีสินค้าในสต็อก เริ่มเพิ่มได้เลย!</p>
+                    <button id="import-btn" class="btn-primary">Import CSV</button>
+                </div>
+            <% } else { %>
+                <% items.forEach(item => { %>
+                    <div class="card" data-sku="<%= item.sku %>" data-item='<%- JSON.stringify(item) %>'>
+                        <div class="card-image-container">
+                            <img class="card-image active" src="/uploads/<%= item.imagepath %>" alt="รูปสินค้า <%= item.sku %>" loading="lazy">
+                            <% if (item.imagepath_b) { %>
+                                <img class="card-image" src="/uploads/<%= item.imagepath_b %>" alt="รูปสินค้า <%= item.sku %> รอง" loading="lazy">
+                            <% } %>
+                            <% if (item.imagepath_b) { %>
+                                <div class="dots-container">
+                                    <span class="dot active"></span>
+                                    <span class="dot"></span>
+                                </div>
+                            <% } %>
+                            <button class="delete-icon-btn hidden" aria-label="ลบสินค้า <%= item.sku %>">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <span class="sku-tag">SKU: <%= item.sku %></span>
+                                <!-- ปุ่มแก้ไขถูกซ่อนไว้ในตอนแรก -->
+                                <button class="edit-btn hidden" aria-label="แก้ไขสินค้า <%= item.sku %>">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                </button>
+                      
+                             
+                            </div>
+                            <div class="badges">
+                                <% const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl']; %>
+                                <% sizes.forEach(size => { %>
+                                    <% if (item.sizes && item.sizes[size] > 0) { %>
+                                        <span class="badge badge-<%= size %>"><%= size.toUpperCase() %>: <strong><%= item.sizes[size] %></strong></span>
+                                    <% } %>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } %>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal-overlay" style="display: none;">
+        <div id="modalContent" class="modal-content">
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editSku" name="sku">
+                    <div class="form-group">
+                        <label for="editSkuDisplay">รหัสสินค้า</label>
+                        <input id="editSkuDisplay" type="text" disabled>
+                    </div>
+                    <div class="form-group">
+                    
+                    </div>
+                    <div id="editSizeInputs" class="edit-sizes-grid">
+                        
+                    </div>
+                    <footer class="modal-footer">
+                        <button type="button" id="saveChangesBtn" class="btn-primary">บันทึกการเปลี่ยนแปลง</button>
+                    </footer>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <button id="mobile-add-btn" class="fab">+</button>
+
+    <script src="/public/js/script.js"></script>
+</body>
+</html>
