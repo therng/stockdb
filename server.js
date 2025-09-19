@@ -36,8 +36,6 @@ const upload = multer({ storage });
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// [ปรับปรุง] Serve icons และ manifest พร้อม Cache-Control Headers เพื่อแก้ปัญหา Cache
-// การตั้งค่านี้จะบอกเบราว์เซอร์ให้ตรวจสอบไฟล์ใหม่ทุกครั้ง
 const staticIconOptions = {
     setHeaders: (res, path, stat) => {
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
