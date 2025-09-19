@@ -6,16 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SHIRT">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <title>SHIRT</title>
-
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="/favicon.ico?v=1">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1">
-    <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png">
-    
-    <link rel="stylesheet" href="/public/css/style.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -31,7 +28,7 @@
         <aside class="sidebar">
             <form id="stockForm" action="/submit" method="post" enctype="multipart/form-data">
                 <div class="sidebar-header">
-                    <h2>เพิ่ม / อัปเดต</h2>
+                    <h2>   </h2>
                 </div>
 
                 <div id="imagePreview" class="image-preview"></div>
@@ -78,7 +75,7 @@
             <% if (items.length === 0) { %>
                 <div class="empty-state-container">
                     <p class="empty-state">ยังไม่มีสินค้าในสต็อก เริ่มเพิ่มได้เลย!</p>
-                    <button id="import-btn" class="btn-primary">Import CSV</button>
+                    <button id="import-btn" class="btn-primary">Import</button>
                 </div>
             <% } else { %>
                 <% items.forEach(item => { %>
@@ -147,6 +144,6 @@
         </div>
     </div>
     
-    <script src="/public/js/script.js"></script>
+    <script src="/js/script.js"></script>
 </body>
 </html>

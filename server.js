@@ -6,7 +6,6 @@ import mongoose from 'mongoose';
 import dotenv from "dotenv";
 import csv from 'csv-parser';
 
-// โหลดค่าจากไฟล์ .env
 dotenv.config();
 
 const app = express();
@@ -41,15 +40,12 @@ const staticIconOptions = {
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 };
-app.use(express.static(path.join(publicDir, "icon"), staticIconOptions));
-
-app.get('/manifest.json', (req, res) => {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.sendFile(path.join(viewsDir, 'manifest.json'));
-});
+// เสิร์ฟไฟล์ static สำหรับ PWA/Web App (รวมถึง icons และไฟล์ favicon.ico, icon-192.png, icon-512.png)
+app.use('/icons', express.static(path.join(publicDir, 'icons'), staticIconOptions));
 
 app.use("/uploads", express.static(uploadsDir));
-app.use("/public", express.static(publicDir));
+app.use(express.static(publicDir));  // เสิร์ฟ static root public
+
 app.set("view engine", "ejs");
 app.set("views", viewsDir);
 
