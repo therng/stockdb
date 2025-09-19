@@ -123,6 +123,11 @@ body {
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
+.form-group-hide {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
 .form-group {
   display: flex;
