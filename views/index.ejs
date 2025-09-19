@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">    <meta name="theme-color" content="#000000">
-
+    <meta charset="UTF-8">
+    <meta name="theme-color" content="#000000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
     <meta name="apple-mobile-web-app-capable" content="yes">
-
     <meta name="apple-mobile-web-app-title" content="SHIRT">
-
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
+    <title>SHIRT</title>
+
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-icon" href="/apple-icon.png">
-    <title  >SHIRT</title>  
-</head>
-<link rel="stylesheet" href="/public/css/style.css">
+    <link rel="icon" href="/favicon.ico?v=1">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1">
+    
+    <link rel="stylesheet" href="/public/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -40,33 +39,34 @@
                     <input id="sku" type="text" name="sku" placeholder="ป้อน SKU เพื่ออัปเดต (ปล่อยว่างเพื่อสร้างใหม่)" autocomplete="off" >
                 </div>
 
-                <div class="form-actions-grid">
-                    <div class="form-group qty-group">
-                        <label for="qty">จำนวน</label>
-                        <select id="qty" name="qty" class="action-item">
-                            <% for (let i=1; i<=12; i++) { %>
-                                <option value="<%= i %>" <%= i === 1 ? 'selected' : '' %>><%= i %></option>
-                            <% } %>
-                        </select>
+                <div class="sidebar-footer">
+                    <div class="form-actions-grid">
+                        <div class="form-group qty-group">
+                            <label for="qty">จำนวน</label>
+                            <select id="qty" name="qty" class="action-item">
+                                <% for (let i=1; i<=12; i++) { %>
+                                    <option value="<%= i %>" <%= i === 1 ? 'selected' : '' %>><%= i %></option>
+                                <% } %>
+                            </select>
+                        </div>
+                        <label for="image" class="upload-btn action-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            รูปหน้า
+                        </label>
+                        <input id="image" type="file" name="image" accept="image/*" style="display: none;">
+                        <label for="image_b" class="upload-btn action-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            รูปหลัง
+                        </label>
+                        <input id="image_b" type="file" name="image_b" accept="image/*" style="display: none;">
                     </div>
-                    <label for="image" class="upload-btn action-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        รูปหน้า
-                    </label>
-                    <input id="image" type="file" name="image" accept="image/*" style="display: none;">
-                    <label for="image_b" class="upload-btn action-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        รูปหลัง
-                    </label>
-                    <input id="image_b" type="file" name="image_b" accept="image/*" style="display: none;">
-                </div>
-
-                <div class="form-group">
-                    <label>ขนาด</label>
-                    <div class="size-buttons" role="group">
-                        <% ['XS', 'S', 'M', 'L', 'XL', 'XXL'].forEach(size => { %>
-                            <button type="submit" name="size" value="<%= size %>" class="size-btn-<%= size.toLowerCase() %>"><%= size %></button>
-                        <% }) %>
+                    <div class="form-group">
+                        <label>ขนาด</label>
+                        <div class="size-buttons" role="group">
+                            <% ['XS', 'S', 'M', 'L', 'XL', 'XXL'].forEach(size => { %>
+                                <button type="submit" name="size" value="<%= size %>" class="size-btn-<%= size.toLowerCase() %>"><%= size %></button>
+                            <% }) %>
+                        </div>
                     </div>
                 </div>
             </form>

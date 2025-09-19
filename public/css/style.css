@@ -83,7 +83,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  max-width: 400px;
+  max-width: 360px;
   height: 100vh;
   background-color: var(--surface-bg);
   padding: 2rem;
