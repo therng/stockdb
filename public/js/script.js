@@ -284,107 +284,197 @@ if (imageInputB) {
         });
     }
 
-    // --- Swipe Gestures for Sidebar ---
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const swipeThreshold = 50; // Min distance for a swipe
-    const edgeThreshold = 40; // Max distance from edge to start swipe
+    // --- Swipe Gestures & Responsive Sidebar ---
+    // Sidebar swipe open/close with smooth follow and scroll lock
+    let sidebarTouching = false;
+    let sidebarStartX = 0;
+    let sidebarCurrentX = 0;
+    let sidebarDragging = false;
+    const sidebarSwipeThreshold = 50;
+    const sidebarEdgeThreshold = 40;
+    let sidebarWasOpen = false;
 
+    // Touch start: detect from edge to open, or on sidebar to close
     document.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
+        if (!sidebar) return;
+        const x = e.touches[0].clientX;
+        sidebarWasOpen = sidebar.classList.contains('active');
+        // Open gesture (from edge)
+        if (!sidebarWasOpen && x < sidebarEdgeThreshold) {
+            sidebarTouching = true;
+            sidebarStartX = x;
+            sidebarCurrentX = x;
+            sidebar.style.transition = 'none';
+            sidebar.classList.add('dragging');
+        }
+        // Close gesture (from sidebar area)
+        if (sidebarWasOpen && x < sidebar.offsetWidth + 20) {
+            sidebarTouching = true;
+            sidebarStartX = x;
+            sidebarCurrentX = x;
+            sidebar.style.transition = 'none';
+            sidebar.classList.add('dragging');
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+        if (!sidebarTouching) return;
+        const x = e.touches[0].clientX;
+        sidebarCurrentX = x;
+        let delta = x - sidebarStartX;
+        if (!sidebarWasOpen) { // Opening
+            if (delta > 0 && delta < sidebar.offsetWidth) {
+                sidebar.style.transform = `translateX(${delta - sidebar.offsetWidth}px)`;
+            }
+        } else { // Closing
+            if (delta < 0 && Math.abs(delta) < sidebar.offsetWidth) {
+                sidebar.style.transform = `translateX(${delta}px)`;
+            }
+        }
     }, { passive: true });
 
     document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
+        if (!sidebarTouching) return;
+        sidebarTouching = false;
+        sidebar.style.transition = 'transform 0.25s cubic-bezier(.4,0,.2,1)';
+        sidebar.classList.remove('dragging');
+        let delta = sidebarCurrentX - sidebarStartX;
+        if (!sidebarWasOpen) { // Opening
+            if (delta > sidebarSwipeThreshold) {
+                sidebar.style.transform = '';
+                openSidebar();
+            } else {
+                sidebar.style.transform = '';
+                closeSidebar();
+            }
+        } else { // Closing
+            if (delta < -sidebarSwipeThreshold) {
+                sidebar.style.transform = '';
+                closeSidebar();
+            } else {
+                sidebar.style.transform = '';
+                openSidebar();
+            }
+        }
+        setTimeout(() => {
+            if (sidebar) sidebar.style.transition = '';
+            if (sidebar) sidebar.style.transform = '';
+        }, 300);
     });
 
-    function handleSwipe() {
-        const deltaX = touchEndX - touchStartX;
-        // Swipe Right from Left Edge to Open
-        if (deltaX > swipeThreshold && touchStartX < edgeThreshold && !sidebar.classList.contains('active')) {
-            openSidebar();
-        }
-        // Swipe Left to Close
-        if (deltaX < -swipeThreshold && sidebar.classList.contains('active')) {
-            closeSidebar();
-        }
+    // Prevent sidebar scroll from scrolling body (lock scroll)
+    if (sidebar) {
+        sidebar.addEventListener('touchmove', function(e) {
+            const atTop = sidebar.scrollTop === 0;
+            const atBottom = sidebar.scrollHeight - sidebar.scrollTop === sidebar.clientHeight;
+            const touch = e.touches[0];
+            let lastY = sidebar._lastTouchY || touch.clientY;
+            let newY = touch.clientY;
+            let deltaY = newY - lastY;
+            sidebar._lastTouchY = newY;
+            if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        sidebar.addEventListener('touchend', function() {
+            sidebar._lastTouchY = undefined;
+        });
     }
-    // --- ฟังก์ชัน Swipe to Dismiss สำหรับ Modal ---
-    let startX = 0;
-    let startY = 0;
-    let isDragging = false;
-    let modalTopOffset = 0;
-    const dragThreshold = 50; // ระยะที่ต้องลากถึงจะถือว่าปัดทิ้ง
 
+    // --- Modal Drag (Smooth/Responsive) ---
+    let modalDragStartY = 0;
+    let modalDragCurrentY = 0;
+    let modalDragging = false;
+    let modalStartTransform = 0;
+    const modalDragThreshold = 80;
+
+    // Mouse events
     modalContent.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        modalTopOffset = modalContent.offsetTop;
+        if (e.button !== 0) return;
+        modalDragging = true;
+        modalDragStartY = e.clientY;
+        modalDragCurrentY = e.clientY;
         modalContent.style.transition = 'none';
+        modalStartTransform = 0;
+        document.body.style.userSelect = 'none';
     });
-
-    modalContent.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-        modalContent.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+    document.addEventListener('mousemove', (e) => {
+        if (!modalDragging) return;
+        modalDragCurrentY = e.clientY;
+        let deltaY = modalDragCurrentY - modalDragStartY;
+        if (deltaY > 0) {
+            modalContent.style.transform = `translateY(${deltaY}px)`;
+        }
     });
-
-    modalContent.addEventListener('mouseup', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-        modalContent.style.transition = 'transform 0.3s ease-in-out';
-
-        if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
-            modalContent.style.transform = `translate(${deltaX * 5}px, ${deltaY * 5}px)`;
+    document.addEventListener('mouseup', (e) => {
+        if (!modalDragging) return;
+        modalDragging = false;
+        document.body.style.userSelect = '';
+        let deltaY = modalDragCurrentY - modalDragStartY;
+        modalContent.style.transition = 'transform 0.25s cubic-bezier(.4,0,.2,1)';
+        if (deltaY > modalDragThreshold) {
+            modalContent.style.transform = `translateY(100vh)`;
             setTimeout(() => {
                 editModal.style.display = 'none';
                 modalContent.style.transform = 'translateY(0)';
-            }, 300);
+                modalContent.style.transition = '';
+            }, 250);
         } else {
             modalContent.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                modalContent.style.transition = '';
+            }, 250);
         }
     });
-    
-    // สำหรับมือถือ
+
+    // Touch events
     modalContent.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-        modalTopOffset = modalContent.offsetTop;
+        if (e.touches.length > 1) return;
+        modalDragging = true;
+        modalDragStartY = e.touches[0].clientY;
+        modalDragCurrentY = e.touches[0].clientY;
         modalContent.style.transition = 'none';
-    });
-
+        modalStartTransform = 0;
+    }, { passive: true });
     modalContent.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
-        modalContent.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-    });
-
+        if (!modalDragging) return;
+        if (e.touches.length > 1) return;
+        modalDragCurrentY = e.touches[0].clientY;
+        let deltaY = modalDragCurrentY - modalDragStartY;
+        if (deltaY > 0) {
+            modalContent.style.transform = `translateY(${deltaY}px)`;
+        }
+    }, { passive: true });
     modalContent.addEventListener('touchend', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        const touch = e.changedTouches[0];
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
-        modalContent.style.transition = 'transform 0.3s ease-in-out';
-
-        if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
-            modalContent.style.transform = `translate(${deltaX * 5}px, ${deltaY * 5}px)`;
+        if (!modalDragging) return;
+        modalDragging = false;
+        let deltaY = modalDragCurrentY - modalDragStartY;
+        modalContent.style.transition = 'transform 0.25s cubic-bezier(.4,0,.2,1)';
+        if (deltaY > modalDragThreshold) {
+            modalContent.style.transform = `translateY(100vh)`;
             setTimeout(() => {
                 editModal.style.display = 'none';
                 modalContent.style.transform = 'translateY(0)';
-            }, 300);
+                modalContent.style.transition = '';
+            }, 250);
         } else {
             modalContent.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                modalContent.style.transition = '';
+            }, 250);
         }
-    });
+    }, { passive: true });
 
+    // Prevent modal drag from scrolling body
+    if (modalContent) {
+        modalContent.addEventListener('touchmove', function(e) {
+            if (modalDragging) e.preventDefault();
+        }, { passive: false });
+    }
+
+    // Make sidebar scrollable, not overflow viewport
+    if (sidebar) {
+        sidebar.style.maxHeight = '100vh';
+        sidebar.style.overflowY = 'auto';
+    }
 });

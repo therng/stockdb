@@ -219,6 +219,32 @@ app.post('/delete', async (req, res) => {
     }
 });
 
+app.post('/delete-all', async (req, res) => {
+    try {
+        // 1. ค้นหารายการทั้งหมดเพื่อเอารายชื่อไฟล์รูปภาพ
+        const itemsToDelete = await Item.find({}, 'imagepath imagepath_b');
+
+        // 2. ลบไฟล์รูปภาพทั้งหมดที่เกี่ยวข้อง
+        itemsToDelete.forEach(item => {
+            if (item.imagepath) {
+                const imageFile = path.join(uploadsDir, item.imagepath);
+                if (fs.existsSync(imageFile)) fs.unlinkSync(imageFile);
+            }
+            if (item.imagepath_b) {
+                const imageFileB = path.join(uploadsDir, item.imagepath_b);
+                if (fs.existsSync(imageFileB)) fs.unlinkSync(imageFileB);
+            }
+        });
+
+        // 3. ลบข้อมูลทั้งหมดจาก collection
+        await Item.deleteMany({});
+
+        res.status(200).send('ลบข้อมูลทั้งหมดเรียบร้อย');
+    } catch (err) {
+        console.error("เกิดข้อผิดพลาดในการลบข้อมูลทั้งหมด:", err);
+        res.status(500).send("เกิดข้อผิดพลาดในเซิร์ฟเวอร์ขณะลบข้อมูล");
+    }
+});
 // Endpoint ใหม่สำหรับ Import CSV
 app.post('/import-csv', async (req, res) => {
     try {
