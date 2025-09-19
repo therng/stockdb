@@ -36,9 +36,19 @@ const upload = multer({ storage });
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Serve icons and manifest from the root
-app.use(express.static(path.join(publicDir, "icon")));
-app.get('/manifest.json', (req, res) => res.sendFile(path.join(viewsDir, 'manifest.json')));
+// [ปรับปรุง] Serve icons และ manifest พร้อม Cache-Control Headers เพื่อแก้ปัญหา Cache
+// การตั้งค่านี้จะบอกเบราว์เซอร์ให้ตรวจสอบไฟล์ใหม่ทุกครั้ง
+const staticIconOptions = {
+    setHeaders: (res, path, stat) => {
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+};
+app.use(express.static(path.join(publicDir, "icon"), staticIconOptions));
+
+app.get('/manifest.json', (req, res) => {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(viewsDir, 'manifest.json'));
+});
 
 app.use("/uploads", express.static(uploadsDir));
 app.use("/public", express.static(publicDir));
