@@ -35,6 +35,11 @@ const upload = multer({ storage });
 // --- Middleware ---
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Serve icons and manifest from the root
+app.use(express.static(path.join(publicDir, "icon")));
+app.get('/manifest.json', (req, res) => res.sendFile(path.join(viewsDir, 'manifest.json')));
+
 app.use("/uploads", express.static(uploadsDir));
 app.use("/public", express.static(publicDir));
 app.set("view engine", "ejs");
@@ -67,25 +72,22 @@ async function connectDB() {
   }
 }
 
+// --- Helper Function ---
+async function getNextSku() {
+    const lastItem = await Item.findOne().sort({ sku: -1 }).lean();
+    if (lastItem && !isNaN(parseInt(lastItem.sku, 10))) {
+        const lastSkuNum = parseInt(lastItem.sku, 10);
+        return String(lastSkuNum + 1).padStart(2, '0');
+    }
+    return '00'; // ถ้ายังไม่มีสินค้าในระบบเลย
+}
+
 // --- Routes ---
 // หน้าหลัก: แสดงข้อมูลสินค้าทั้งหมด
 app.get("/", async (req, res) => {
   try {
-    // 1. ดึงรายการสินค้าทั้งหมด (เหมือนเดิม)
     const items = await Item.find().sort({ sku: 1 }).lean();
-    
-    // 2. หา SKU ล่าสุดด้วยวิธีใหม่ที่เร็วกว่า
-    const lastItem = await Item.findOne().sort({ sku: -1 }).lean(); // หาแค่ชิ้นเดียวที่ sku สูงสุด
-
-    let nextSku;
-    if (lastItem && !isNaN(parseInt(lastItem.sku, 10))) {
-        // ถ้าเจอสินค้าชิ้นล่าสุด และ sku เป็นตัวเลข
-        const lastSkuNum = parseInt(lastItem.sku, 10);
-        nextSku = String(lastSkuNum + 1).padStart(2, '0');
-    } else {
-        // ถ้ายังไม่มีสินค้าในระบบเลย
-        nextSku = '00';
-    }
+    const nextSku = await getNextSku();
 
     res.render("index", { items, nextSku });
   } catch (err) {
@@ -103,12 +105,7 @@ app.post("/submit", upload.fields([{ name: 'image', maxCount: 1 }, { name: 'imag
 
         let sku = skuTrim;
         if (!existingItem && !skuTrim) {
-            const lastItem = await Item.findOne().sort({ sku: -1 });
-            let lastSkuNum = -1;
-            if (lastItem && !isNaN(parseInt(lastItem.sku, 10))) {
-                lastSkuNum = parseInt(lastItem.sku, 10);
-            }
-            sku = String(lastSkuNum + 1).padStart(2, '0');
+            sku = await getNextSku();
         }
 
         let imagepath = existingItem ? existingItem.imagepath : "";

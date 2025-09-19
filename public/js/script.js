@@ -1,5 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
     
+const sidebar = document.querySelector('.sidebar');
+const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+const overlay = document.querySelector('.overlay');
+
+function openSidebar() {
+    if (!sidebar) return;
+    sidebar.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+}
+
+function closeSidebar() {
+    if (!sidebar) return;
+    sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+}
+
+if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener('click', () => {
+        sidebar.classList.contains('active') ? closeSidebar() : openSidebar();
+    });
+}
+
+if (overlay) {
+    overlay.addEventListener('click', closeSidebar);
+}
 const imageInputA = document.getElementById('image');
 const imageInputB = document.getElementById('image_b');
 const imagePreview = document.getElementById('imagePreview');
@@ -7,17 +32,39 @@ const imagePreview = document.getElementById('imagePreview');
 function updatePreview(input, type) {
     if (!imagePreview) return;
 
-    // ลบภาพเดิมของประเภทนั้น (หน้า/หลัง)
-    const oldImg = imagePreview.querySelector(`img[data-type="${type}"]`);
-    if (oldImg) oldImg.remove();
+    // ค้นหาและลบ container ของพรีวิวเดิมสำหรับประเภทนั้นๆ
+    const oldPreviewContainer = imagePreview.querySelector(`.preview-item[data-type="${type}"]`);
+    if (oldPreviewContainer) oldPreviewContainer.remove();
 
-    // สร้างภาพใหม่
+    // สร้างพรีวิวใหม่
     if (input.files && input.files.length > 0) {
+        const file = input.files[0];
+
+        // สร้าง container สำหรับรูปและปุ่มลบ
+        const previewItem = document.createElement('div');
+        previewItem.className = 'preview-item';
+        previewItem.setAttribute('data-type', type);
+
+        // สร้าง element รูปภาพ
         const img = document.createElement('img');
-        img.src = URL.createObjectURL(input.files[0]);
+        img.src = URL.createObjectURL(file);
         img.className = 'thumb';
-        img.setAttribute('data-type', type);
-        imagePreview.appendChild(img);
+        
+        // สร้างปุ่มลบ
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-preview-btn';
+        removeBtn.innerHTML = '&times;'; // เครื่องหมาย '×'
+        removeBtn.type = 'button'; // ป้องกันการ submit ฟอร์ม
+
+        // เพิ่ม event listener ให้ปุ่มลบ
+        removeBtn.addEventListener('click', () => {
+            previewItem.remove(); // ลบพรีวิวออกจากหน้าจอ
+            input.value = ''; // **สำคัญมาก:** เคลียร์ค่าใน file input
+        });
+
+        previewItem.appendChild(img);
+        previewItem.appendChild(removeBtn);
+        imagePreview.appendChild(previewItem);
     }
 }
 
@@ -195,26 +242,6 @@ if (imageInputB) {
         }
     });
 
-    // --- การทำงานของฟอร์มบนมือถือ ---
-    const mobileAddBtn = document.getElementById('mobile-add-btn');
-    const formContainer = document.querySelector('.form-container');
-
-    if (mobileAddBtn && formContainer) {
-        mobileAddBtn.addEventListener('click', () => {
-            formContainer.classList.toggle('active');
-            // เปลี่ยนไอคอนปุ่ม
-            mobileAddBtn.textContent = formContainer.classList.contains('active') ? '×' : '+';
-        });
-
-        // ปิดฟอร์มเมื่อคลิกนอกพื้นที่ (ถ้าต้องการ)
-        document.querySelector('.product-grid').addEventListener('click', () => {
-            if (formContainer.classList.contains('active')) {
-                formContainer.classList.remove('active');
-                mobileAddBtn.textContent = '+';
-            }
-        });
-    }
-
     // --- การทำงานของปุ่ม Import CSV ---
     const importBtn = document.getElementById('import-btn');
     if (importBtn) {
@@ -257,6 +284,32 @@ if (imageInputB) {
         });
     }
 
+    // --- Swipe Gestures for Sidebar ---
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const swipeThreshold = 50; // Min distance for a swipe
+    const edgeThreshold = 40; // Max distance from edge to start swipe
+
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        const deltaX = touchEndX - touchStartX;
+        // Swipe Right from Left Edge to Open
+        if (deltaX > swipeThreshold && touchStartX < edgeThreshold && !sidebar.classList.contains('active')) {
+            openSidebar();
+        }
+        // Swipe Left to Close
+        if (deltaX < -swipeThreshold && sidebar.classList.contains('active')) {
+            closeSidebar();
+        }
+    }
     // --- ฟังก์ชัน Swipe to Dismiss สำหรับ Modal ---
     let startX = 0;
     let startY = 0;
